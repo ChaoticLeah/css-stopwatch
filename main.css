@@ -1,0 +1,126 @@
+/* NOTE: Due to SOME bug the animation to frame will also need to be changed if we want to up the max time */
+@property --max-time-sec {
+  syntax: "<integer>";
+  inherits: true;
+  initial-value: 31536000; /* 365 days in seconds */
+  /* 86400; 24 hours in seconds */
+}
+
+@property --timer-sec {
+  syntax: "<integer>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.timer {
+  animation: timer-animation calc(var(--max-time-sec) * 1s) linear forwards;
+
+  &::after {
+    --s: mod(var(--timer-sec), 60);
+    --m: mod(round(down, var(--timer-sec) / 60), 60);
+    --h: round(down, var(--timer-sec) / 3600);
+    --d: round(down, var(--timer-sec) / 86400);
+
+    counter-reset: day var(--d) hours var(--h) min var(--m) sec var(--s);
+
+    content:  counter(day, decimal-leading-zero) " "
+      counter(hours, decimal-leading-zero) ":"
+      counter(min, decimal-leading-zero) ":" counter(sec, decimal-leading-zero);
+    
+  }
+}
+
+/* Pause/Play Logic */
+body:has(#play-timer:not(:checked)) .timer {
+  animation-play-state: paused;
+}
+
+@keyframes timer-animation {
+  from {
+    --timer-sec: 0;
+  }
+  to {
+    --timer-sec: 31536000;
+  }
+}
+
+/*  ============ All code below is aesthetics ============ */
+
+:root {
+  --background: #121212;
+  --text: #e0e0e0;
+  --accent: #bb86fc;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+#container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.timer {
+  font-family: "Courier New", monospace;
+  font-size: 5rem;
+  font-weight: bold;
+}
+
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Hide the actual checkbox */
+#play-timer {
+  display: none;
+}
+
+/* Make it take the whole screen so anywhere we click triggers the checkbox */
+#play-timer-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  cursor: pointer;
+}
+
+#reset-timer {
+  z-index: 10;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+}
+
+#paused-notif {
+  opacity: 0;
+
+  body:has(#play-timer:not(:checked)) & {
+    color: var(--accent);
+    font-size: 1.5rem;
+    animation: paused-blink 2s infinite;
+  }
+}
+
+@keyframes paused-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
